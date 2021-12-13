@@ -1,13 +1,13 @@
 # Group6COMP258ProjectBackEnd
 
-set environment variable and run the flask
+set environment variable and run the flask\
 
-$env:FLASK_APP = "main"
-flask run
+$env:FLASK_APP = "main"\
+flask run\
 
 
-default port is 5000
-api : http://localhost:5000/predict
+default port is 5000\
+api : http://localhost:5000/predict\
 body:
 {
     "INTAKE COLLEGE EXPERIENCE": "New to College",
