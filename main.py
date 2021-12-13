@@ -19,6 +19,7 @@ app = Flask(__name__)
 CORS(app)
 
 
+
 with open("encoder.pkl", "rb") as f: 
     encoder = pickle.load(f) 
 
@@ -29,7 +30,7 @@ model = keras.models.load_model("model_Jiaxing.h5")
 
 @app.route("/")
 def hello_world():
-    return "<p>Hello, World!</p>"
+    return "<p>test!</p>"
     
 
 @app.route("/predict", methods=['GET','POST'])
@@ -60,20 +61,9 @@ def predict():
         "result": result,
     }    
 
-'''
 if __name__ == '__main__':
     try:
         port = int(sys.argv[1]) # This is for a command-line input
     except:
-        port = 3000 # If you don't provide any port the port will be set to 12345
-
-    with open("encoder.pkl", "rb") as f: 
-        encoder = pickle.load(f) 
-
-    with open("scaler.pkl", "rb") as f: 
-        scaler = pickle.load(f)     
-        
-    model = keras.models.load_model("model_Jiaxing.h5")
-    
+        port = 5000 # If you don't provide any port the port will be set to 12345
     app.run(port=port, debug=True)
-'''
