@@ -18,8 +18,6 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-
-
 with open("encoder.pkl", "rb") as f: 
     encoder = pickle.load(f) 
 
