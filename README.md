@@ -1,12 +1,11 @@
 # Group6COMP258ProjectBackEnd
-###
-run the backend
-###
+
+set environment variable and run the flask
 
 $env:FLASK_APP = "main"
 flask run
 
-###
+
 default port is 5000
 api : http://localhost:5000/predict
 body:
@@ -30,4 +29,3 @@ body:
     "PROGRAM LENGTH": "20",
     "REST SEMESTERS": "0"
 }
-###
