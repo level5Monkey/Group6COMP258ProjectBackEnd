@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Nov 21 12:34:35 2021
+Created on Tue Dec 14 16:25:32 2021
 
 @author: Jiaxing Li
 """
@@ -20,7 +20,8 @@ from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
 import pickle
 import matplotlib.pyplot as plt
-from tensorflow.keras import regularizers
+from sklearn.ensemble import RandomForestClassifier
+import time
 
 
 config = ConfigProto()
@@ -168,57 +169,41 @@ print(enc_targets.get_feature_names_out())
 y = pd.DataFrame(data = y, columns = enc_targets.get_feature_names_out())
 """
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, stratify=y, random_state=42)
-X_fit, X_val, y_fit, y_val = train_test_split(X_train,y_train,test_size=0.2,stratify=y_train)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
 
 
-earlystopping = callbacks.EarlyStopping(monitor ="loss", 
-                                        mode ="auto", patience = 5, 
-                                        restore_best_weights = True)
+plt.rcParams.update({'figure.figsize': (120.0, 80.0)})
+plt.rcParams.update({'font.size': 70})
 
-#build model and training
-model = keras.models.Sequential([
-keras.layers.Flatten(input_shape=[len(X_train.columns)]),
-keras.layers.Dense(32, activation="selu", kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4)),
-keras.layers.Dropout(0.5),
-keras.layers.Dense(16, activation="selu", kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4)),
-keras.layers.Dropout(0.2),
-keras.layers.Dense(8, activation="selu", kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4)),
-keras.layers.Dropout(0.2),
-keras.layers.Dense(1, activation="sigmoid")
-])
+rf = RandomForestClassifier(n_estimators=100)
+rf.fit(X_train, y_train)
 
-model.summary()
-optimizer = keras.optimizers.Adam(learning_rate=0.01)
-model.compile(loss="binary_crossentropy",
-              optimizer=optimizer,
-              metrics=["accuracy"])
+sorted_idx = rf.feature_importances_.argsort()
 
-history = model.fit(X_fit, y_fit, epochs=300, callbacks=[earlystopping],validation_data=(X_val,y_val))
+plt.barh(X.columns[sorted_idx], rf.feature_importances_[sorted_idx])
+plt.xlabel("Random Forest Feature Importance")
 
-model.evaluate(X_test, y_test)
-"""
-model.save('model_Jiaxing.h5')
 
-# plot
+from sklearn.inspection import permutation_importance
 
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
-loss = history.history['loss']
-val_loss = history.history['val_loss']
+forest = RandomForestClassifier(random_state=0)
+forest.fit(X_train, y_train)
 
-epochs = range(1, len(acc) + 1)
+sorted_idx = forest.feature_importances_.argsort()
 
-plt.plot(epochs, acc, 'r', label='Training acc')
-plt.plot(epochs, val_acc, 'b', label='Validation acc')
-plt.title('Training and validation accuracy')
-plt.legend()
+start_time = time.time()
+result = permutation_importance(
+    forest, X_test, y_test, n_repeats=10, random_state=42, n_jobs=2
+)
+std = np.std([tree.feature_importances_ for tree in forest.estimators_], axis=0)
 
-plt.figure()
+elapsed_time = time.time() - start_time
+print(f"Elapsed time to compute the importances: {elapsed_time:.3f} seconds")
 
-plt.plot(epochs, loss, 'r', label='Training loss')
-plt.plot(epochs, val_loss, 'b', label='Validation loss')
-plt.title('Training and validation loss')
-plt.legend()
+forest_importances = pd.Series(result.importances_mean, index=X.columns)
 
-plt.show()"""
+fig, ax = plt.subplots()
+forest_importances.plot.bar(yerr=std, ax=ax)
+ax.set_title("Feature importances using MDI")
+ax.set_ylabel("Mean decrease in impurity")
+fig.tight_layout()
